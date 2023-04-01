@@ -19,7 +19,7 @@ firebase innit
 ```
 - `Choose the option` : Configure files for Firebase Hosting and (optionally) set up GitHub Action deploys
 - What do you want to use as your public directory? --> build
-- Configure as a single-page app (rewrite all urls to /index.html)? -> yes
+- Configure as a single-page app (rewrite all urls to /index.html)? --> yes
 - Set up automatic builds and deploys with GitHub? --> No
 
 - 3: Create folder
