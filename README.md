@@ -1,46 +1,94 @@
-# Getting Started with Create React App
+# CI/CD Firebase
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Step
+- 1: Open terminal
 
-## Available Scripts
+```bash
+curl -sL https://firebase.tools | bash
+```
 
-In the project directory, you can run:
+- 2: Create project with doc or cd to your project
+- Link: [React Document](https://create-react-app.dev/docs/getting-started)
+```bash
+cd project_name
+```
 
-### `npm start`
+- 3: innit Firebase to project
+```bash
+firebase innit
+```
+- `Choose the option` : Configure files for Firebase Hosting and (optionally) set up GitHub Action deploys
+- What do you want to use as your public directory? --> build
+- Configure as a single-page app (rewrite all urls to /index.html)? -> yes
+- Set up automatic builds and deploys with GitHub? --> No
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- 3: Create folder
+```bash
+mkdir .github && cd .github && mkdir workflows && touch firebase-hosting.yml
+```
+- Add this script to file `yml`:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+```bash
+name: Firebase CI
 
-### `npm test`
+on:
+  push:
+    # workflow_dispatch:
+    branches:
+      - master
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-### `npm run build`
+    strategy:
+      matrix:
+        node-version: [18.x]
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js version ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+      - name: Install Yarn
+        run: npm install -g yarn
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+      - run: yarn
+      - run: npm install -g firebase-tools
+      - run: yarn test
+      - run: yarn build
+      - name: Archive build
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: build
 
-### `npm run eject`
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download build
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: build
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- 4: Get firebase token
+```bash
+firebase login:ci
+ ```
+ - then copy string behind the test `Success! Use this token to login on a CI server:`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Thanks you & have a nice day ^^~
